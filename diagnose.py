@@ -1,107 +1,108 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""诊断脚本 - 逐步检查模块导入"""
+"""
+诊断脚本 - 检查后端启动问题
+"""
 
 import sys
-import traceback
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
 
 print("=" * 60)
-print("Step 1: Importing config...")
+print("知遇 AI 馆员 - 诊断工具")
+print("=" * 60)
+print()
+
+# 1. 检查依赖
+print("1. 检查依赖...")
+try:
+    import fastapi
+    print(f"  ✓ fastapi {fastapi.__version__}")
+except ImportError:
+    print("  ❌ fastapi 未安装")
+
+try:
+    import uvicorn
+    print(f"  ✓ uvicorn {uvicorn.__version__}")
+except ImportError:
+    print("  ❌ uvicorn 未安装")
+
+try:
+    import pydantic
+    print(f"  ✓ pydantic {pydantic.__version__}")
+except ImportError:
+    print("  ❌ pydantic 未安装")
+
+print()
+
+# 2. 检查配置
+print("2. 检查配置...")
 try:
     from config import settings
-    print("[OK] config imported")
+    print(f"  ✓ 端口: {settings.port}")
+    print(f"  ✓ LLM提供商: {settings.llm_provider}")
+    print(f"  ✓ 模型: {settings.llm_model}")
 except Exception as e:
-    print(f"[FAIL] config failed: {e}")
+    print(f"  ❌ 配置加载失败: {e}")
+
+print()
+
+# 3. 检查数据文件
+print("3. 检查数据文件...")
+data_dir = Path("data")
+if data_dir.exists():
+    books_file = data_dir / "books.json"
+    memories_file = data_dir / "memories.json"
+
+    if books_file.exists():
+        import json
+        with open(books_file, 'r', encoding='utf-8') as f:
+            books = json.load(f)
+        print(f"  ✓ books.json: {len(books)} 条记录")
+    else:
+        print(f"  ❌ 找不到 books.json")
+
+    if memories_file.exists():
+        print(f"  ✓ memories.json 存在")
+    else:
+        print(f"  ⚠ memories.json 不存在（首次运行会创建）")
+else:
+    print(f"  ❌ data 目录不存在")
+
+print()
+
+# 4. 尝试导入主模块
+print("4. 尝试导入主模块...")
+try:
+    from main import app
+    print("  ✓ main.py 导入成功")
+    print(f"  ✓ FastAPI 应用: {app.title}")
+except Exception as e:
+    print(f"  ❌ main.py 导入失败: {e}")
+    import traceback
     traceback.print_exc()
-    sys.exit(1)
 
-print("\n" + "=" * 60)
-print("Step 2: Importing database...")
+print()
+
+# 5. 尝试启动服务（1秒后自动停止）
+print("5. 尝试启动服务（测试模式）...")
 try:
-    from models.database import init_db, get_db
-    print("[OK] database module imported")
+    import uvicorn
+    from config import settings
 
-    print("\nInitializing database...")
-    init_db(settings.books_data_path, settings.memories_data_path)
-    print("[OK] database initialized")
+    print("  启动中...（按 Ctrl+C 停止）")
+    print()
+
+    # 启动服务（这会阻塞）
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",  # 只监听本地，方便测试
+        port=settings.port,
+        reload=False,  # 关闭热重载
+        log_level="info"
+    )
+except KeyboardInterrupt:
+    print("\n  服务已停止")
 except Exception as e:
-    print(f"[FAIL] database failed: {e}")
+    print(f"  ❌ 启动失败: {e}")
+    import traceback
     traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 3: Importing schemas...")
-try:
-    from models.schemas import Book, UserInput, Memory
-    print("[OK] schemas imported")
-except Exception as e:
-    print(f"[FAIL] schemas failed: {e}")
-    traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 4: Importing embedding...")
-try:
-    from utils.embedding import get_embedding_mgr
-    print("[OK] embedding module imported")
-
-    print("\nInitializing embedding manager...")
-    mgr = get_embedding_mgr()
-    print(f"[OK] embedding manager ready (dim={mgr.dim})")
-except Exception as e:
-    print(f"[FAIL] embedding failed: {e}")
-    traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 5: Importing book_service...")
-try:
-    from services.book_service import book_service
-    print("[OK] book_service imported")
-except Exception as e:
-    print(f"[FAIL] book_service failed: {e}")
-    traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 6: Importing memory_service...")
-try:
-    from services.memory_service import memory_service
-    print("[OK] memory_service imported")
-except Exception as e:
-    print(f"[FAIL] memory_service failed: {e}")
-    traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 7: Importing recommender...")
-try:
-    from services.recommender import recommender
-    print("[OK] recommender imported")
-except Exception as e:
-    print(f"[FAIL] recommender failed: {e}")
-    traceback.print_exc()
-    sys.exit(1)
-
-print("\n" + "=" * 60)
-print("Step 8: Importing llm_client...")
-try:
-    from utils.llm_client import get_llm_client
-    print("[OK] llm_client imported")
-except Exception as e:
-    print(f"[FAIL] llm_client failed: {e}")
-    print("(Skipping - requires API key configuration)")
-
-print("\n" + "=" * 60)
-print("Step 9: Importing agent...")
-try:
-    from services.agent import agent
-    print("[OK] agent imported")
-except Exception as e:
-    print(f"[FAIL] agent failed: {e}")
-    print("(Skipping - requires LLM and API key)")
-
-print("\n" + "=" * 60)
-print("[OK][OK][OK] Core modules imported successfully!")
-print("(LLM and Agent skipped - need API key)")
-print("=" * 60)

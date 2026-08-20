@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"  # openai | anthropic
     llm_model: str = "gpt-3.5-turbo"
 
+    # 代理配置
+    http_proxy: Optional[str] = None
+    https_proxy: Optional[str] = None
+
     # 服务配置
     port: int = 8000
     debug: bool = True
