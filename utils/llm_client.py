@@ -4,6 +4,7 @@ LLM 客户端封装 - 支持安全密钥加载
 import os
 from typing import Optional
 from openai import OpenAI
+import httpx
 import anthropic
 from config import settings
 
@@ -77,6 +78,13 @@ class LLMClient:
             # 如果配置了 base_url，添加进去（用于代理或自定义端点）
             if hasattr(settings, 'openai_base_url') and settings.openai_base_url:
                 client_kwargs["base_url"] = settings.openai_base_url
+
+            # 如果配置了代理，使用 httpx.HTTPTransport（新版本 httpx 语法）
+            if settings.http_proxy or settings.https_proxy:
+                proxy_url = settings.https_proxy or settings.http_proxy
+                transport = httpx.HTTPTransport(proxy=proxy_url)
+                http_client = httpx.Client(transport=transport)
+                client_kwargs["http_client"] = http_client
 
             self.client = OpenAI(**client_kwargs)
 
