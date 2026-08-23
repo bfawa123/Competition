@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 运行日志与调试输出
+*.log
+backend/install_log.txt
+backend/diagnose_output.txt
+
+# 运行时生成的数据（可由脚本重建/运行时产生）
+backend/data/memories.json
+backend/data/embeddings_cache.json
+
+# 前端
+node_modules/
+dist/
+.pnpm-store/
+*.tsbuildinfo
+
+# 本地环境配置
+.env
+.env.local
+
+# 大体积重复归档
+fronted.zip
+
+# 临时文档
+新建 DOC 文档.doc
