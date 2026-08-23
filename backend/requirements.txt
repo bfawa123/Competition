@@ -1,0 +1,15 @@
+fastapi>=0.104.1
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+pydantic>=2.5.2
+pydantic-settings>=2.1.0
+httpx>=0.25.2
+openpyxl>=3.1.0
+scikit-learn>=1.5.0
+numpy>=1.26.0
+
+# 以下两项为可选依赖：未安装时 LLM 解释和句子向量会用规则兜底 / TF-IDF 离线模式
+# openai>=1.3.7
+# anthropic>=0.8.1
+# sentence-transformers>=2.2.2  # 启用 BAAI/bge-m3 语义检索时安装
