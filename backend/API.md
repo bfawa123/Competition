@@ -298,6 +298,75 @@ GET /api/agent/trace/user_123
 
 ---
 
+### 11. 灵犀学习助手（智能问答）
+
+```http
+POST /api/assistant/chat
+```
+
+**请求体**：
+```json
+{
+  "question": "这条路线怎么安排学习？",
+  "context": {
+    "userName": "张三",
+    "input": {
+      "goal": "machine_learning",
+      "difficulty": "beginner",
+      "time_per_day": 30,
+      "language": "zh"
+    },
+    "books": [
+      {
+        "book": { ... },
+        "total_score": 85.5,
+        "topic_score": 1.0,
+        "difficulty_score": 1.0,
+        "time_score": 0.7,
+        "preference_score": 0.8,
+        "explanation": "..."
+      }
+    ],
+    "currentPage": "route"
+  }
+}
+```
+
+**参数说明**：
+- `question`：用户的问题
+- `context.userName`：当前用户名称
+- `context.input`：用户的学习目标设置
+- `context.books`：当前学习路线中的书籍列表
+- `context.currentPage`：当前页面标识（route/recommend/compare）
+
+**响应**：
+```json
+{
+  "answer": "根据你的学习目标，建议...（纯文本，无markdown格式）"
+}
+```
+
+**说明**：
+- 返回的文本已自动去除 markdown 格式
+- **加粗**、*斜体*、`代码`等符号会被移除
+- 保留换行、列表、缩进等基本排版
+- 确保在纯文本环境中也能正确显示
+
+**功能特点**：
+- 🤖 结合用户上下文智能回答
+- 📚 了解当前学习路线的所有书籍
+- 🧠 引用用户历史偏好记忆
+- 💡 提供个性化的学习建议
+- 🔄 LLM 不可用时自动降级到规则回复
+
+**使用场景**：
+- 在"我的路线"页面询问学习建议
+- 询问为什么这样安排学习路线
+- 询问如何调整学习计划
+- 询问书籍的阅读顺序
+
+---
+
 ## 使用示例
 
 ### 完整推荐流程

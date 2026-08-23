@@ -3,12 +3,6 @@ LLM 客户端封装 - 支持安全密钥加载
 """
 import os
 from typing import Optional
-<<<<<<< HEAD:backend/utils/llm_client.py
-=======
-from openai import OpenAI
-import httpx
-import anthropic
->>>>>>> 5a1079d06f156da6ff056ad2c63f5dba7585ccfd:utils/llm_client.py
 from config import settings
 
 # 可选导入：openai / anthropic 未安装时降级
@@ -56,6 +50,14 @@ def _load_api_key_safely(key_name: str, fallback: Optional[str]) -> Optional[str
     Returns:
         API 密钥或 None
     """
+    # 对于 OpenAI provider，同时检查 DEEPSEEK_API_KEY
+    if key_name == "OPENAI_API_KEY":
+        # 1. 先尝试从 DEEPSEEK_API_KEY 加载
+        deepseek_key = os.getenv("DEEPSEEK_API_KEY")
+        if deepseek_key and not deepseek_key.startswith("CHANGE_ME"):
+            print("[OK] 从 DEEPSEEK_API_KEY 环境变量加载")
+            return deepseek_key
+
     # 1. 从系统环境变量加载（最安全）
     env_key = os.getenv(key_name)
     if env_key and not env_key.startswith("CHANGE_ME"):
@@ -107,11 +109,7 @@ class LLMClient:
                 client_kwargs["base_url"] = settings.openai_base_url
 
             # 如果配置了代理，使用 httpx.HTTPTransport（新版本 httpx 语法）
-<<<<<<< HEAD:backend/utils/llm_client.py
             if _HAS_HTTPX and (settings.http_proxy or settings.https_proxy):
-=======
-            if settings.http_proxy or settings.https_proxy:
->>>>>>> 5a1079d06f156da6ff056ad2c63f5dba7585ccfd:utils/llm_client.py
                 proxy_url = settings.https_proxy or settings.http_proxy
                 transport = httpx.HTTPTransport(proxy=proxy_url)
                 http_client = httpx.Client(transport=transport)

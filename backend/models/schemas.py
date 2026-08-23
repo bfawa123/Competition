@@ -117,3 +117,24 @@ class RecommendationRequest(BaseModel):
     user_input: UserInput
     user_id: str
     compare_with: Optional[str] = None  # 用于前后对比
+
+
+# ============ 灵犀助手模型 ============
+
+class AssistantContext(BaseModel):
+    """灵犀助手上下文"""
+    userName: str
+    input: UserInput
+    books: List[BookScore]
+    currentPage: str  # 当前页面：route / recommend / compare 等
+
+
+class AssistantReply(BaseModel):
+    """灵犀助手回复"""
+    answer: str
+
+
+class AssistantChatRequest(BaseModel):
+    """灵犀助手聊天请求"""
+    question: str
+    context: AssistantContext

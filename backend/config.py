@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = None
     llm_provider: str = "openai"  # openai | anthropic
     llm_model: str = "gpt-3.5-turbo"
+    openai_base_url: Optional[str] = None  # 自定义 OpenAI 兼容 API 地址（如 DeepSeek）
 
     # 代理配置
     http_proxy: Optional[str] = None

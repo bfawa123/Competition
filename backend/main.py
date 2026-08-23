@@ -13,13 +13,16 @@ from models.schemas import (
     RecommendationResponse,
     MemoryCreate,
     MemoryRetrieve,
-    BookSearchFilters
+    BookSearchFilters,
+    AssistantChatRequest,
+    AssistantReply
 )
 from services.agent import agent
 from services.memory_service import memory_service
 from services.book_service import book_service
 from models.database import init_db
 
+import re
 from typing import Dict, Any
 
 
@@ -284,6 +287,174 @@ async def demo_compare(user_id: str):
             "impact": "推荐结果已根据反馈调整" if second_result.memories_used else "无记忆影响"
         }
     }
+
+
+# ============ 灵犀助手接口 ============
+
+@app.post("/api/assistant/chat", response_model=AssistantReply)
+async def assistant_chat(request: AssistantChatRequest):
+    """
+    灵犀学习助手 - 智能问答
+
+    结合用户上下文（学习目标、路线书籍、个人偏好记忆）回答用户问题。
+
+    使用场景：
+    - 在"我的路线"页面询问学习建议
+    - 询问为什么这样安排学习路线
+    - 询问如何调整学习计划
+    """
+    try:
+        # 构建上下文信息
+        context_parts = []
+
+        # 1. 用户基本信息
+        context_parts.append(f"用户：{request.context.userName}")
+
+        # 2. 学习目标
+        goal = request.context.input.goal
+        difficulty = request.context.input.difficulty.value if hasattr(request.context.input.difficulty, 'value') else request.context.input.difficulty
+        time_per_day = request.context.input.time_per_day
+        language = request.context.input.language.value if hasattr(request.context.input.language, 'value') else request.context.input.language
+        context_parts.append(f"学习目标：{goal}，难度：{difficulty}，每日时间：{time_per_day}分钟，语言偏好：{language}")
+
+        # 3. 路线书籍信息
+        if request.context.books:
+            context_parts.append("\n当前学习路线包含以下书籍：")
+            for i, book_score in enumerate(request.context.books, 1):
+                book = book_score.book
+                context_parts.append(
+                    f"{i}. 《{book.title}》- {book.difficulty}，{book.pages}页，"
+                    f"语言：{book.language}，评分：{book_score.total_score:.1f}"
+                )
+                if book.keywords:
+                    context_parts.append(f"   关键词：{', '.join(book.keywords[:5])}")
+        else:
+            context_parts.append("当前还没有选择任何书籍。")
+
+        # 4. 相关记忆
+        memories = memory_service.retrieve_memory(
+            user_id=request.context.userName,
+            query=request.question,
+            top_k=3
+        )
+        if memories:
+            context_parts.append("\n用户历史偏好记忆：")
+            for mem in memories:
+                context_parts.append(f"- {mem.field}: {mem.value}（置信度：{mem.confidence}）")
+
+        context_text = "\n".join(context_parts)
+
+        # 构建 prompt
+        prompt = f"""你是灵犀学习助手，一位专业的学习顾问。请根据以下用户上下文信息，回答用户的问题。
+
+{context_text}
+
+用户问题：{request.question}
+
+请提供有帮助、具体且可操作的建议。如果问题与当前学习路线无关，请礼貌地引导用户关注他们的学习计划。
+回答要简洁友好，控制在200字以内。如果提供具体建议，请说明理由。"""
+
+        # 调用 LLM
+        try:
+            llm = agent._get_llm()
+            if llm is None:
+                raise RuntimeError("LLM 客户端不可用")
+
+            answer = llm.chat([
+                {
+                    "role": "system",
+                    "content": "你是灵犀学习助手，专门帮助用户优化学习路线、解答学习问题、提供学习建议。"
+                },
+                {"role": "user", "content": prompt}
+            ], temperature=0.7, max_tokens=500)
+
+            # 去除 markdown 格式
+            answer = _remove_markdown(answer)
+
+        except Exception as llm_error:
+            print(f"[WARN] LLM 调用失败: {llm_error}")
+            # 兜底回复
+            answer = _generate_fallback_answer(request.context, request.question)
+
+        return AssistantReply(answer=answer)
+
+    except Exception as e:
+        print(f"[ERROR] 灵犀助手接口错误: {e}")
+        raise HTTPException(status_code=500, detail=f"灵犀助手暂时无法回答: {str(e)}")
+
+
+def _generate_fallback_answer(context: 'AssistantContext', question: str) -> str:
+    """生成兜底回复（LLM 不可用时）"""
+    books = context.books
+    if not books:
+        return "我注意到你还没有选择任何书籍。建议你先完成学习目标设置，获取个性化推荐后再来咨询学习路线问题。"
+
+    book_count = len(books)
+    total_pages = sum(bs.book.pages for bs in books)
+    time_per_day = context.input.time_per_day
+    estimated_days = max(1, total_pages // time_per_day)
+
+    if "顺序" in question or "怎么学" in question or "计划" in question:
+        return f"根据你的学习目标，建议按以下顺序学习：\n1. 先学习《{books[0].book.title}》（主线书）\n2. 穿插阅读补充书籍\n预计完成时间：约{estimated_days}天。你可以点击【每日阅读安排】查看详细的7天计划。"
+    elif "太难" in question or "调整" in question or "修改" in question:
+        return "如果觉得当前路线太难，可以：\n1. 增加每日学习时间\n2. 选择更基础的书籍\n3. 返回推荐页调整难度设置\n你还可以在书籍详情中提供反馈，我会记住你的偏好并优化推荐。"
+    elif "为什么" in question:
+        return f"这条路线包含{book_count}本书，总计{total_pages}页。主线书《{books[0].book.title}》负责搭建知识框架，补充书提供案例和练习。这样的组合可以帮助你系统性地掌握{context.input.goal}。"
+    else:
+        return f"你当前的学习路线包含{book_count}本书。如果需要调整，可以返回推荐页修改偏好设置，或者告诉我你的具体需求，我会尽力帮你优化学习计划。"
+
+
+def _remove_markdown(text: str) -> str:
+    """
+    去除 markdown 格式符号，返回纯文本
+
+    处理：
+    - **加粗** → 纯文本
+    - *斜体* → 纯文本
+    - `代码` → 纯文本
+    - [链接](url) → 纯文本
+    - # 标题 → 纯文本
+    - --- 分隔线 → 移除
+    - > 引用 → 纯文本
+    - 列表标记 → 保留文本
+    """
+    if not text:
+        return text
+
+    # 1. 移除加粗 **text** 或 __text__
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+
+    # 2. 移除斜体 *text* 或 _text_（避免与加粗冲突，先处理加粗）
+    text = re.sub(r'(?<!\*)\*(?!\*)(.*?)\*(?!\*)', r'\1', text)
+    text = re.sub(r'(?<!_)_(?!_)(.*?)_(?!_)', r'\1', text)
+
+    # 3. 移除行内代码 `code`
+    text = re.sub(r'`(.*?)`', r'\1', text)
+
+    # 4. 移除代码块 ```code```
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+
+    # 5. 移除链接 [text](url)
+    text = re.sub(r'\[(.*?)\]\(.*?\)', r'\1', text)
+
+    # 6. 移除图片 ![alt](url)
+    text = re.sub(r'!\[(.*?)\]\(.*?\)', r'\1', text)
+
+    # 7. 移除标题标记 # ## ### 等
+    text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
+
+    # 8. 移除引用标记 >
+    text = re.sub(r'^>\s+', '', text, flags=re.MULTILINE)
+
+    # 9. 移除水平线 --- 或 ***
+    text = re.sub(r'^\s*[-*_]{3,}\s*$', '', text, flags=re.MULTILINE)
+
+    # 10. 清理多余空白（保留换行）
+    text = re.sub(r'[ \t]+', ' ', text)  # 多个空格/制表符合并为一个空格
+    text = re.sub(r'\n{3,}', '\n\n', text)  # 多个换行合并为两个
+
+    return text.strip()
 
 
 # ============ 启动 ============
