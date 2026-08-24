@@ -1,4 +1,4 @@
-import type { Book, BookScore, CompareResponse, Memory, RecommendationResponse, TraceStep, UserInput } from "./types";
+import type { Book, BookScore, Memory, RecommendationResponse, TraceStep, UserInput } from "./types";
 
 const books: Book[] = [
   { id: 1, title: "Python编程：从入门到实践", topic: "Python基础", difficulty: "beginner", pages: 460, language: "zh", case_ratio: 0.8, theory_ratio: 0.4, prerequisites: [], goals: ["入门"], keywords: ["Python基础", "计算机", "专业教材"], availability: true, description: "《Python编程：从入门到实践》出自[美] 埃里克 • 马瑟斯（Eric Matthes）之手，围绕Python基础方向系统梳理。全书约460页，内容翔实而不冗长，整体风格案例驱动、注重实操演练，可帮助初学者建立扎实基础。", location: "令希图书馆 5楼 计算机区 04架", space: "创客实操区" },
@@ -526,10 +526,3 @@ export function makeRecommendation(input: UserInput, userId: string): Recommenda
   return { books: scored, memories_used: getMockMemories(userId).slice(0, 3), explanation: "根据你的学习目标与每日时间预算，从书库中筛选最匹配的书目，并参考你的长期偏好（语言、篇幅、案例占比）排序。", agent_trace: mockTrace };
 }
 
-export function makeComparison(userId: string): CompareResponse {
-  const input: UserInput = { goal: "Python基础", difficulty: "beginner", time_per_day: 30, language: "zh" };
-  const relevant = books.filter((b) => [1, 2, 3, 4].includes(b.id));
-  const first = relevant.map((b) => score(b, input, false)).sort((a, b) => b.total_score - a.total_score);
-  const second = relevant.map((b) => score(b, input, true)).sort((a, b) => b.total_score - a.total_score);
-  return { user_id: userId, feedback: "书太厚了，我更喜欢案例多、篇幅短的内容。", memory_saved: getMockMemories(userId)[1] ?? memories[0], first_recommendation: { books: first, explanation: "基于显式条件生成的初始路线。", memories_used: 0 }, second_recommendation: { books: second, explanation: "短篇、案例驱动的书籍获得更高排序。", memories_used: 3 }, comparison: { memory_added: "pages, language, prefer_cases", impact: "短篇实战书籍上升，长篇理论书籍下降" } };
-}

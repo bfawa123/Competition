@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMockBooks, getMockMemories, makeComparison, makeRecommendation, writeMockMemory } from "./mockData";
+import { getMockBooks, getMockMemories, makeRecommendation, writeMockMemory } from "./mockData";
 
 describe("demo recommendation data", () => {
   it("sorts recommendations by descending total score", () => {
@@ -18,14 +18,6 @@ describe("demo recommendation data", () => {
     expect(intermediate.books.every(({ book }) => book.difficulty !== "advanced")).toBe(true);
     expect(advanced.books.some(({ book }) => book.difficulty === "beginner")).toBe(true);
     expect(advanced.books.some(({ book }) => book.difficulty === "intermediate")).toBe(true);
-  });
-
-  it("keeps comparison data aligned to the same books", () => {
-    const result = makeComparison("demo_freshman");
-    const beforeIds = result.first_recommendation.books.map((item) => item.book.id).sort();
-    const afterIds = result.second_recommendation.books.map((item) => item.book.id).sort();
-    expect(afterIds).toEqual(beforeIds);
-    expect(result.second_recommendation.memories_used).toBeGreaterThan(0);
   });
 
   it("compresses common feedback into a structured demo memory", () => {

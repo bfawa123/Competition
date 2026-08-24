@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { ArrowsLeftRightIcon, BooksIcon, BrainIcon, CpuIcon, MoonIcon, PathIcon, PlusIcon, SparkleIcon, SunIcon, UserCircleIcon } from "@phosphor-icons/react";
+import { BooksIcon, BrainIcon, CpuIcon, MoonIcon, PathIcon, PlusIcon, SparkleIcon, SunIcon, UserCircleIcon } from "@phosphor-icons/react";
 import { useApp } from "./state";
 
 const nav = [
-  ["/recommend", "推荐", SparkleIcon], ["/compare", "对比", ArrowsLeftRightIcon], ["/memories", "记忆", BrainIcon],
+  ["/recommend", "推荐", SparkleIcon], ["/memories", "记忆", BrainIcon],
   ["/books", "书库", BooksIcon], ["/route", "路线", PathIcon], ["/trace", "轨迹", CpuIcon], ["/users", "用户", UserCircleIcon],
 ] as const;
 
-const titles: Record<string, string> = { recommend: "推荐工作台", result: "学习路线", route: "我的路线", compare: "记忆影响对比", memories: "记忆中心", books: "书目检索", trace: "Agent 轨迹", users: "用户管理" };
+const titles: Record<string, string> = { recommend: "推荐工作台", result: "学习路线", route: "我的路线", memories: "记忆中心", books: "书目检索", trace: "Agent 轨迹", users: "用户管理" };
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, users, setUser, dark, setDark } = useApp();

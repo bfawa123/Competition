@@ -66,12 +66,3 @@ export interface RecommendationResponse {
   explanation: string;
   agent_trace: TraceStep[];
 }
-
-export interface CompareResponse {
-  user_id: string;
-  feedback: string;
-  memory_saved: Memory;
-  first_recommendation: { books: BookScore[]; explanation: string; memories_used: number };
-  second_recommendation: { books: BookScore[]; explanation: string; memories_used: number };
-  comparison: { memory_added: string; impact: string };
-}

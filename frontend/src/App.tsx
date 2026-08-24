@@ -7,7 +7,6 @@ const ResultPage = lazy(() => import("./pages/ResultPage"));
 const RoutePage = lazy(() => import("./pages/RoutePage"));
 const MemoriesPage = lazy(() => import("./pages/MemoriesPage"));
 const BooksPage = lazy(() => import("./pages/BooksPage"));
-const ComparePage = lazy(() => import("./pages/ComparePage"));
 const TracePage = lazy(() => import("./pages/TracePage"));
 const UsersPage = lazy(() => import("./pages/UsersPage"));
 
@@ -19,7 +18,6 @@ export default function App() {
     <Route path="/result" element={<Navigate to="/result/latest" replace />} />
     <Route path="/memories" element={<MemoriesPage />} />
     <Route path="/books" element={<BooksPage />} />
-    <Route path="/compare" element={<ComparePage />} />
     <Route path="/trace" element={<TracePage />} />
     <Route path="/users" element={<UsersPage />} />
     <Route path="*" element={<Navigate to="/recommend" replace />} />
