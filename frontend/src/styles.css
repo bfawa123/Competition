@@ -375,6 +375,10 @@ textarea:focus, input:focus, select:focus { border-color: var(--blue); outline: 
 .comparison-title small { color: var(--muted); }
 .comparison-title.after span { color: var(--green); }
 .comparison-books > div { min-height: 116px; display: grid; grid-template-columns: 28px 55px minmax(0, 1fr) auto auto; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+.comparison-book-item { cursor: pointer; transition: background .2s; border-radius: 4px; }
+.comparison-book-item:hover { background: var(--surface-2); }
+.book-open-icon { color: var(--blue); opacity: 0; transition: opacity .2s; }
+.comparison-book-item:hover .book-open-icon { opacity: 1; }
 .comparison-books .book-cover { width: 54px; }
 .compare-rank { color: var(--muted); font: 600 10px Consolas, monospace; }
 .comparison-books > div > span:not(.compare-rank) { display: grid; gap: 4px; min-width: 0; }
