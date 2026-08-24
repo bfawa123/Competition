@@ -12,7 +12,6 @@ import openpyxl
 BASE = os.path.dirname(os.path.abspath(__file__))
 XLSX_CANDIDATES = ["书库1.xlsx", "书库（换封面版）.xlsx"]
 OUTPUT_PATH = os.path.join(BASE, "data", "books.json")
-
 # 难度映射: xlsx 5级 → 后端 3级
 DIFFICULTY_MAP = {
     "1级-零基础入门": "beginner",
@@ -31,10 +30,14 @@ LANGUAGE_MAP = {
 
 
 def find_xlsx():
+    # 在项目根目录和 data/ 目录下查找书库文件
+    project_root = os.path.dirname(BASE)
+    search_paths = [project_root, os.path.join(project_root, "data")]
     for name in XLSX_CANDIDATES:
-        p = os.path.join(os.path.dirname(BASE), name)
-        if os.path.exists(p):
-            return p
+        for search_path in search_paths:
+            p = os.path.join(search_path, name)
+            if os.path.exists(p):
+                return p
     raise FileNotFoundError(f"未找到书库文件，尝试过: {XLSX_CANDIDATES}")
 
 

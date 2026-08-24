@@ -19,25 +19,28 @@
 把 `Competition-项目完整包.zip` 解压到任意位置，例如桌面，得到一个文件夹：
 
 ```
-Competition-项目完整包/
+灵犀0.15-修复详情弹窗/
 ├── backend/
-├── fronted/
+├── frontend/
+├── scripts/
+│   ├── start.py
+│   ├── start.bat
+│   └── diagnose.py
 ├── setup.py
-├── start_all_fixed.py
-├── start_all_fixed.bat
-└── 书库1.xlsx
+└── data/
+    └── 书库1.xlsx
 ```
 
 ### 2. 安装环境（只做一次）
 
-**推荐方式：双击运行 `start_all_fixed.bat`**
+**推荐方式：双击运行 `scripts/start.bat`**
 
 首次运行会自动检测环境、创建虚拟环境并安装依赖，等待几分钟即可。
 
 如果自动安装失败，也可以手动打开命令行执行：
 
 ```bash
-cd Competition-项目完整包
+cd 灵犀0.15-修复详情弹窗
 python setup.py
 ```
 
@@ -48,13 +51,13 @@ python setup.py
 安装完成后，每次启动直接双击：
 
 ```
-start_all_fixed.bat
+scripts/start.bat
 ```
 
 或者命令行：
 
 ```bash
-python start_all_fixed.py
+python scripts/start.py
 ```
 
 启动成功后会自动打开两个黑色命令行窗口：
@@ -76,7 +79,7 @@ http://127.0.0.1:5173
 
 ### 2. `npm install` 很慢或失败
 
-脚本会自动尝试淘宝镜像，如果仍然失败，手动进入 `fronted/fronted` 运行：
+脚本会自动尝试淘宝镜像，如果仍然失败，手动进入 `frontend` 运行：
 
 ```bash
 npm config set registry https://registry.npmmirror.com

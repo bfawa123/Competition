@@ -182,7 +182,7 @@ python test_assistant.py
 
 ## 前端配置
 
-在前端的 `fronted/fronted/.env` 文件中添加：
+在前端的 `frontend/.env` 文件中添加：
 ```env
 VITE_DEEPSEEK_API_URL=http://127.0.0.1:8000/api/assistant/chat
 ```
@@ -222,8 +222,8 @@ FastAPI 会自动生成交互式 API 文档：
 - ✓ `灵犀助手API说明.md` - 本使用说明文档
 
 ### 未修改文件（已实现功能）
-- ✓ `fronted/fronted/src/services/assistantApi.ts` - 前端 API 调用封装（已存在）
-- ✓ `fronted/fronted/src/pages/RoutePage.tsx` - 前端 UI 和调用逻辑（已存在）
+- ✓ `frontend/src/services/assistantApi.ts` - 前端 API 调用封装（已存在）
+- ✓ `frontend/src/pages/RoutePage.tsx` - 前端 UI 和调用逻辑（已存在）
 
 ## 开发记录
 

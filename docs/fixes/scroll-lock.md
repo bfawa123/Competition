@@ -27,8 +27,8 @@
 改动只在以下两个文件，直接覆盖到你们项目对应位置即可：
 
 ```
-fronted/fronted/src/components.tsx
-fronted/fronted/src/pages/BooksPage.tsx
+frontend/src/components.tsx
+frontend/src/pages/BooksPage.tsx
 ```
 
 > 如果你们项目里 `components.tsx` / `BooksPage.tsx` 在此基础上还有其它本地改动，请手动合并——核心改动点是：

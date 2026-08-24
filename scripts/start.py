@@ -11,9 +11,9 @@ import time
 import threading
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent  # scripts/ 的父目录是项目根目录
 BACKEND_DIR = BASE_DIR / "backend"
-FRONTEND_DIR = BASE_DIR / "fronted" / "fronted"
+FRONTEND_DIR = BASE_DIR / "frontend"
 VENV_DIR = BACKEND_DIR / ".venv"
 
 
@@ -61,7 +61,7 @@ def find_node_modules():
     if not node_modules.exists():
         raise RuntimeError(
             "前端依赖未安装。请先运行一次：python setup.py\n"
-            "或进入 fronted/fronted 执行：npm install"
+            "或进入 frontend 执行：npm install"
         )
 
 

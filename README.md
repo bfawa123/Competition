@@ -17,7 +17,7 @@
 - 前端：React 19、TypeScript、Vite
 - 后端：FastAPI、Pydantic、Uvicorn
 - 数据：`backend/data/books.json`、`backend/data/memories.json`
-- 原始书库：`书库1.xlsx`
+- 原始书库：`data/data/书库1.xlsx`
 
 ## 环境要求
 
@@ -28,11 +28,11 @@
 
 ## 一键安装与启动
 
-在项目根目录双击 `start_all_fixed.bat`。脚本会在首次运行时：
+在项目根目录双击 `scripts/start.bat`。脚本会在首次运行时：
 
 1. 创建 `backend/.venv` Python 虚拟环境；
 2. 安装 `backend/requirements.txt`；
-3. 安装 `fronted/fronted` 的 npm 依赖；
+3. 安装 `frontend` 的 npm 依赖；
 4. 分别启动后端和前端。
 
 启动后访问：
@@ -40,7 +40,7 @@
 - 应用：<http://127.0.0.1:5173>
 - API 文档：<http://localhost:8000/docs>
 
-后续启动仍可直接双击 `start_all_fixed.bat`。关闭对应终端窗口即可停止服务。
+后续启动仍可直接双击 `scripts/start.bat`。关闭对应终端窗口即可停止服务。
 
 ## 命令行方式
 
@@ -53,18 +53,18 @@ python setup.py
 同时启动前后端：
 
 ```powershell
-python start_all_fixed.py
+python scripts/start.py
 ```
 
 分别启动：
 
 ```powershell
 # 终端 1：后端
-cd backend
+cd backend/app
 .venv\Scripts\python.exe main.py
 
 # 终端 2：前端
-cd fronted\fronted
+cd frontend
 npm run dev
 ```
 
@@ -78,7 +78,7 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-前端默认请求同源 `/api`，Vite 开发服务器会按 `vite.config.ts` 代理到后端。如需直连其他后端，在 `fronted/fronted/.env.local` 设置：
+前端默认请求同源 `/api`，Vite 开发服务器会按 `frontend/vite.config.ts` 代理到后端。如需直连其他后端，在 `frontend/.env.local` 设置：
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
@@ -94,7 +94,7 @@ cd backend
 .venv\Scripts\python.exe test_backend.py
 
 # 前端测试、类型检查和生产构建
-cd ..\fronted\fronted
+cd frontend
 npm test
 npm run typecheck
 npm run build
@@ -103,14 +103,31 @@ npm run build
 ## 目录结构
 
 ```text
-Competition-项目完整包/
-├─ backend/                 # FastAPI 接口、推荐服务、数据与测试
-├─ fronted/fronted/         # React 前端（目录名为项目历史命名）
-├─ setup.py                 # 首次环境安装
-├─ start_all_fixed.bat      # Windows 一键启动
-├─ start_all_fixed.py       # 跨终端启动脚本
-├─ 书库1.xlsx               # 原始馆藏数据
-└─ README.md
+灵犀0.15-修复详情弹窗/
+├─ frontend/             # React 前端
+├─ backend/              # FastAPI 后端
+│  ├─ app/              # 主要业务代码
+│  ├─ tests/            # 后端测试
+│  ├─ services/         # 业务服务层
+│  ├─ models/           # 数据模型
+│  ├─ utils/            # 工具函数
+│  ├─ data/             # JSON 数据文件
+│  └─ covers/           # 书籍封面图片
+├─ scripts/             # 启动、诊断、维护脚本
+│  ├─ start.py
+│  ├─ start.bat
+│  └─ diagnose.py
+├─ docs/                # 项目文档
+│  ├─ deployment.md
+│  ├─ api.md
+│  ├─ fixes/
+│  │  ├─ scroll-lock.md
+│  │  └─ detail-dialog-position.md
+│  └─ ...
+├─ data/                # 原始数据文件
+│  └─ data/书库1.xlsx
+├─ setup.py             # 环境安装脚本
+└─ README.md            # 项目说明
 ```
 
 ## 推荐难度规则
@@ -128,7 +145,7 @@ Competition-项目完整包/
 ## 常见问题
 
 - 提示找不到 Python 或 npm：重新安装对应运行时并勾选“添加到 PATH”，然后打开新终端。
-- `npm install` 失败：进入 `fronted/fronted` 后运行 `npm install`，检查网络和 npm registry 配置。
+- `npm install` 失败：进入 `frontend` 后运行 `npm install`，检查网络和 npm registry 配置。
 - Python 依赖安装失败：删除损坏的 `backend/.venv` 后重新运行 `python setup.py`。
 - 端口 5173 或 8000 被占用：关闭旧的 Vite/Uvicorn 进程后重新启动。
 - 页面能打开但接口报错：先访问 API 文档确认后端已启动，再检查浏览器网络请求和 `.env.local`。

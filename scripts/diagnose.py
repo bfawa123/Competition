@@ -5,7 +5,11 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
+# 添加 backend/app 到 Python 路径，以便导入 config 和 main
+BASE_DIR = Path(__file__).parent.parent  # scripts/ 的父目录是项目根目录
+BACKEND_APP_DIR = BASE_DIR / "backend" / "app"
+sys.path.insert(0, str(BACKEND_APP_DIR))
+sys.path.insert(0, str(BASE_DIR / "backend"))
 
 print("=" * 60)
 print("知遇 AI 馆员 - 诊断工具")

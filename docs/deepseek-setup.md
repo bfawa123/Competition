@@ -40,15 +40,15 @@ LLM_MODEL=deepseek-chat
 
 ### 2. 前端配置
 
-**fronted/fronted/.env**
+**frontend/.env**
 ```env
 VITE_API_BASE_URL=http://localhost:8000
 VITE_DEEPSEEK_API_URL=http://127.0.0.1:8000/api/assistant/chat
 ```
 
 **前端已实现**
-- `fronted/fronted/src/services/assistantApi.ts` - API 调用封装
-- `fronted/fronted/src/pages/RoutePage.tsx` - UI 界面和调用逻辑
+- `frontend/src/services/assistantApi.ts` - API 调用封装
+- `frontend/src/pages/RoutePage.tsx` - UI 界面和调用逻辑
 
 ### 3. 测试验证
 
@@ -83,7 +83,7 @@ python main.py
 ### 2. 启动前端服务（如果还没启动）
 
 ```bash
-cd fronted/fronted
+cd frontend
 npm run dev
 ```
 
@@ -145,7 +145,7 @@ npm run dev
 - `backend/utils/llm_client.py` - 支持 DeepSeek API Key
 - `backend/models/schemas.py` - 添加数据模型
 - `backend/main.py` - 添加灵犀助手接口
-- `fronted/fronted/.env` - 添加 VITE_DEEPSEEK_API_URL
+- `frontend/.env` - 添加 VITE_DEEPSEEK_API_URL
 
 ## 注意事项
 

@@ -13,7 +13,18 @@ import zipfile
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 _xlsx_candidates = ["书库1.xlsx", "书库（换封面版）.xlsx"]
-XLSX = next((os.path.join(os.path.dirname(BASE), n) for n in _xlsx_candidates if os.path.exists(os.path.join(os.path.dirname(BASE), n))), None)
+# 在项目根目录和 data/ 目录下查找书库文件
+project_root = os.path.dirname(BASE)
+search_paths = [project_root, os.path.join(project_root, "data")]
+XLSX = None
+for search_path in search_paths:
+    for name in _xlsx_candidates:
+        candidate = os.path.join(search_path, name)
+        if os.path.exists(candidate):
+            XLSX = candidate
+            break
+    if XLSX:
+        break
 if XLSX is None:
     raise FileNotFoundError(f"未找到书库文件，尝试过: {_xlsx_candidates}")
 BOOKS_JSON = os.path.join(BASE, "data", "books.json")

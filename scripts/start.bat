@@ -7,7 +7,7 @@ echo.
 
 REM 检查环境是否就绪（后端 venv + 前端 node_modules 缺一不可）
 set "NEED_SETUP=0"
-if not exist "%~dp0fronted\fronted\node_modules" set "NEED_SETUP=1"
+if not exist "%~dp0frontend\node_modules" set "NEED_SETUP=1"
 
 REM 检测 .venv 是否存在且可用（跨电脑拷贝时 pyvenv.cfg 可能指向不存在的 Python）
 if exist "%~dp0backend\.venv\Scripts\python.exe" (
@@ -40,7 +40,7 @@ timeout /t 3 /nobreak >nul
 
 REM 启动前端
 echo [FRONTEND] 启动 Vite 前端 (端口 5173)...
-start "知遇AI馆员-前端" cmd /k "cd /d "%~dp0fronted\fronted" && npm run dev"
+start "知遇AI馆员-前端" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
 echo.
 echo ============================================================
