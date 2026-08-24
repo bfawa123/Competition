@@ -41,6 +41,25 @@ cd frontend
 npm run dev
 ```
 
+## 项目结构
+
+```
+灵犀0.15-修复详情弹窗/
+├── frontend/          # React 前端
+├── backend/           # FastAPI 后端
+│   ├── app/          # 核心业务代码（main.py, config.py）
+│   ├── tests/        # 测试文件
+│   ├── services/     # 业务服务层
+│   ├── models/       # 数据模型
+│   ├── utils/        # 工具函数
+│   ├── data/         # JSON 数据文件
+│   └── covers/       # 书籍封面图片
+├── scripts/          # 启动脚本（start.py, start.bat, diagnose.py）
+├── docs/             # 项目文档
+├── data/             # 原始数据文件（书库1.xlsx）
+└── setup.py          # 环境安装脚本
+```
+
 ## 测试
 
 ```bash
@@ -55,19 +74,25 @@ npm test
 
 ## 常见问题
 
-### 1. 提示找不到 Python / npm
+### 1. start.bat 提示找不到 setup.py
+
+**原因：** `scripts/start.bat` 使用相对路径 `%~dp0..\setup.py` 查找项目根目录的 `setup.py`。
+
+**解决：** 确保 `start.bat` 位于 `scripts/` 目录，且 `setup.py` 在项目根目录。
+
+### 2. 提示找不到 Python / npm
 
 - 检查安装时是否勾选了 "添加到 PATH"。
 - 打开新的终端窗口再试。
 
-### 2. `npm install` 很慢或失败
+### 3. `npm install` 很慢或失败
 
 ```bash
 npm config set registry https://registry.npmmirror.com
 npm install
 ```
 
-### 3. pip 安装失败
+### 4. pip 安装失败
 
 ```bash
 cd backend
@@ -75,6 +100,6 @@ python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-### 4. 端口被占用
+### 5. 端口被占用
 
 修改 `backend/config.py` 里的端口设置。
