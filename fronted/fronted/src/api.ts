@@ -52,7 +52,6 @@ export async function searchBooks(filters: Record<string, string>): Promise<Book
   };
   try { const data = await request<{ books: Book[] }>(`/api/books/search?${query}`); return applyKeyword(data.books); }
   catch (error) {
-    if (API_BASE) throw error;
     source = "demo";
     return applyKeyword(getMockBooks().filter((book) => (!filters.topic || book.topic === filters.topic) && (!filters.difficulty || book.difficulty === filters.difficulty) && (!filters.language || book.language === filters.language) && (!filters.max_pages || book.pages <= Number(filters.max_pages))));
   }
@@ -60,7 +59,7 @@ export async function searchBooks(filters: Record<string, string>): Promise<Book
 
 export async function getBook(bookId: number): Promise<Book | undefined> {
   try { return await request<Book>(`/api/books/${bookId}`); }
-  catch (error) { if (API_BASE) throw error; source = "demo"; return getMockBooks().find((book) => book.id === bookId); }
+  catch (error) { source = "demo"; return getMockBooks().find((book) => book.id === bookId); }
 }
 
 export async function getComparison(userId: string): Promise<CompareResponse> {
