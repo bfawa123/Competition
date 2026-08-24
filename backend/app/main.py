@@ -1,6 +1,14 @@
 """
 FastAPI 主应用
 """
+import sys
+from pathlib import Path
+
+# 确保 backend 目录在 sys.path 中，支持从 app/ 导入时找到其他模块
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
