@@ -35,3 +35,9 @@ fronted.zip
 
 # 临时文档
 新建 DOC 文档.doc
+
+# 本地安装产物（不应上传）
+backend/pylibs/
+.dsh-tmp/
+memories.backup-*.json
+*.err

@@ -82,6 +82,30 @@ class MemoryService:
 
         return memory
 
+    @staticmethod
+    def _compute_similarities(query: str, texts: List[str]) -> List[float]:
+        """
+        用"字符 n-gram TF-IDF"计算 query 与每条记忆的余弦相似度。
+
+        原实现依赖一个只在 5 条假文档上拟合的向量器，任何真实文本都会得到
+        零向量、相似度恒为 0。这里改成拿"查询 + 当前用户的记忆"现拟合，
+        中文（按字符切）和英文都能得到有意义的相似度。
+        """
+        if not texts:
+            return []
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity as sk_cosine
+
+            corpus = [query] + list(texts)
+            vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(1, 3), max_features=4096)
+            matrix = vectorizer.fit_transform(corpus)
+            sims = sk_cosine(matrix[0:1], matrix[1:]).ravel()
+            return [float(s) for s in sims]
+        except Exception as exc:
+            print(f"[WARN] 记忆相似度计算失败，回退按置信度排序: {exc}")
+            return [0.0] * len(texts)
+
     def retrieve_memory(self, user_id: str, query: str, top_k: int = None) -> List[Memory]:
         """
         检索相关记忆（向量相似度 + 关键词回退）
@@ -102,29 +126,26 @@ class MemoryService:
         if not user_memories:
             return []
 
-        # 2. 向量相似度检索
-        query_embedding = self.embedding_mgr.get_embedding(query)
-        scored_memories = []
-        for memory in user_memories:
-            mem_text = f"{memory.field}: {memory.value}"
-            mem_embedding = self.embeddings_cache.get(mem_text)
-            if mem_embedding is None:
-                mem_embedding = self.embedding_mgr.get_embedding(mem_text)
-                self.embeddings_cache[mem_text] = mem_embedding
-            similarity = self.embedding_mgr.cosine_similarity(query_embedding, mem_embedding)
-            weighted_score = similarity * memory.confidence
-            if similarity >= settings.memory_similarity_threshold:
-                scored_memories.append((memory, weighted_score))
+        # 2. 用真实文本现拟合 TF-IDF 计算相似度（含反馈原文，便于命中"太厚/太难"等说法）
+        mem_texts = [f"{m.field}: {m.value} {m.source or ''}".strip() for m in user_memories]
+        similarities = self._compute_similarities(query, mem_texts)
 
-        # 3. 回退：如果向量检索无结果，返回用户所有记忆（按置信度排序）
+        # 3. 只保留达到阈值的记忆，用 相似度 × 置信度 加权
+        scored_memories = [
+            (memory, similarity * memory.confidence)
+            for memory, similarity in zip(user_memories, similarities)
+            if similarity >= settings.memory_similarity_threshold
+        ]
+
+        # 4. 回退：如果没有明显相关的记忆，返回用户所有记忆（按置信度排序）
         if not scored_memories:
             scored_memories = [(m, m.confidence) for m in user_memories]
 
-        # 4. 按分数排序，取 Top-K
+        # 5. 按分数排序，取 Top-K
         scored_memories.sort(key=lambda x: x[1], reverse=True)
         top_memories = [mem for mem, score in scored_memories[:top_k]]
 
-        # 5. 更新使用统计
+        # 6. 更新使用统计
         for memory in top_memories:
             memory.usage_count = max(0, memory.usage_count) + 1
             memory.last_used = datetime.now()
@@ -164,7 +185,7 @@ class MemoryService:
 {{
   "type": "preference | task_feedback | fixed_profile",
   "field": "difficulty | time | language | pages | format | topic",
-  "value": "具体值或分类（如 prefer_chinese, daily_30min, too_thick）",
+  "value": "从规范值里选最贴近的一个：prefer_short | prefer_long | prefer_easier | prefer_harder | prefer_chinese | prefer_english | prefer_cases | prefer_theory；确实无法归类时才用简短中文短语",
   "confidence": 0.0-1.0,
   "reasoning": "压缩理由"
 }}
@@ -205,9 +226,10 @@ class MemoryService:
         # 规则匹配
         if any(kw in feedback for kw in ["太厚", "太长", "页数多", "篇幅"]):
             return {"type": "preference", "field": "pages", "value": "prefer_short", "confidence": 0.85, "source": feedback}
-        if any(kw in feedback for kw in ["太难", "高阶", "看不懂"]):
+        # 注意：前端快捷按钮是「难度太高」，必须匹配"太高"（原来只认"太难"，按钮会变成无效的 general 记忆）
+        if any(kw in feedback for kw in ["太难", "太高", "偏难", "看不懂", "太硬", "太难懂"]):
             return {"type": "preference", "field": "difficulty", "value": "prefer_easier", "confidence": 0.85, "source": feedback}
-        if any(kw in feedback for kw in ["太简单", "太浅", "入门"]):
+        if any(kw in feedback for kw in ["太简单", "太浅", "太基础"]):
             return {"type": "preference", "field": "difficulty", "value": "prefer_harder", "confidence": 0.8, "source": feedback}
         if any(kw in feedback for kw in ["中文", "Chinese", "中文版"]):
             return {"type": "preference", "field": "language", "value": "prefer_chinese", "confidence": 0.9, "source": feedback}

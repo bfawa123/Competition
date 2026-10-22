@@ -66,7 +66,8 @@ app.add_middleware(
 
 # 封面图片静态服务（books.json 中 cover 字段指向 /covers/{id}.jpeg）
 import os
-_COVERS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers")
+# covers 位于 backend/covers（而非 app/ 子目录），BACKEND_DIR 已在文件顶部定义为 backend 根目录
+_COVERS_DIR = str(BACKEND_DIR / "covers")
 if os.path.isdir(_COVERS_DIR):
     app.mount("/covers", StaticFiles(directory=_COVERS_DIR), name="covers")
 
@@ -339,9 +340,10 @@ async def assistant_chat(request: AssistantChatRequest):
         else:
             context_parts.append("当前还没有选择任何书籍。")
 
-        # 4. 相关记忆
+        # 4. 相关记忆（用真正的 user_id，而不是显示名 userName）
+        memory_user_id = request.context.user_id or request.context.userName
         memories = memory_service.retrieve_memory(
-            user_id=request.context.userName,
+            user_id=memory_user_id,
             query=request.question,
             top_k=3
         )

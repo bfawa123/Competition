@@ -2,8 +2,9 @@
 推荐评分引擎
 """
 from typing import List, Dict
-from models.schemas import Book, BookScore, UserInput, Memory
+from models.schemas import Book, BookScore, UserInput, Memory, Language
 from config import settings
+from utils.scorer import normalise_memory_value
 
 
 class Recommender:
@@ -74,7 +75,7 @@ class Recommender:
         topic_score = self._score_topic(book, user_input.goal)
 
         # 2. 难度匹配度（0-1）
-        difficulty_score = self._score_difficulty(book, user_input.difficulty)
+        difficulty_score = self._score_difficulty(book, user_input.difficulty, memories)
 
         # 3. 时间匹配度（0-1）
         time_score = self._score_time(book, user_input.time_per_day)
@@ -120,21 +121,26 @@ class Recommender:
 
         return 0.0
 
-    def _score_difficulty(self, book: Book, user_difficulty: str) -> float:
-        """难度匹配评分"""
+    def _score_difficulty(self, book: Book, user_difficulty: str, memories: List[Memory] = None) -> float:
+        """难度匹配评分（记忆里的"太难/太简单"会微调目标难度）"""
         difficulty_order = {"beginner": 1, "intermediate": 2, "advanced": 3}
         book_level = difficulty_order.get(book.difficulty, 2)
         user_level = difficulty_order.get(user_difficulty, 2)
 
-        # 完全匹配
-        if book.difficulty == user_difficulty:
+        # 记忆里的难度偏好：prefer_easier 降一级，prefer_harder 升一级
+        for mem in memories or []:
+            if mem.field == "difficulty":
+                value = normalise_memory_value(mem.value)
+                if value == "prefer_easier":
+                    user_level = max(1, user_level - 1)
+                elif value == "prefer_harder":
+                    user_level = min(3, user_level + 1)
+
+        diff = abs(book_level - user_level)
+        if diff == 0:
             return 1.0
-
-        # 差一级
-        if abs(book_level - user_level) == 1:
+        elif diff == 1:
             return 0.6
-
-        # 差两级
         return 0.2
 
     def _score_time(self, book: Book, daily_minutes: int) -> float:
@@ -156,23 +162,37 @@ class Recommender:
             return 0.4
 
     def _score_preference(self, book: Book, user_input: UserInput, memories: List[Memory]) -> float:
-        """偏好匹配评分"""
+        """偏好匹配评分（语言、内容风格的长期记忆都会生效）"""
         score = 0.5  # 基础分
 
-        # 语言偏好
-        if book.language == user_input.language:
+        # 语言：本次选择优先，其次记忆里的长期语言偏好
+        effective_lang = user_input.language
+        lang_pref = next((m for m in memories if m.field == "language"), None)
+        if lang_pref:
+            value = normalise_memory_value(lang_pref.value)
+            if value == "prefer_english":
+                effective_lang = Language.EN
+            elif value == "prefer_chinese":
+                effective_lang = Language.ZH
+
+        if book.language == effective_lang:
             score += 0.2
         else:
             score -= 0.1
 
-        # 案例驱动偏好
-        case_pref = next((m for m in memories if m.field == "prefer_cases"), None)
-        if case_pref and book.case_ratio >= 0.6:
-            score += 0.15
+        # 内容风格：规则压缩把偏好存成 field="format", value="prefer_cases"/"prefer_theory"
+        format_pref = next((m for m in memories if m.field == "format"), None)
+        if format_pref:
+            value = normalise_memory_value(format_pref.value)
+            if value == "prefer_cases" and book.case_ratio >= 0.6:
+                score += 0.15
+            if value == "prefer_theory" and book.theory_ratio >= 0.6:
+                score += 0.15
 
-        # 理论偏好
-        theory_pref = next((m for m in memories if m.field == "prefer_theory"), None)
-        if theory_pref and book.theory_ratio >= 0.6:
+        # 兼容旧格式（field 直接就是 prefer_cases / prefer_theory）
+        if any(m.field == "prefer_cases" for m in memories) and book.case_ratio >= 0.6:
+            score += 0.15
+        if any(m.field == "prefer_theory" for m in memories) and book.theory_ratio >= 0.6:
             score += 0.15
 
         return max(0.0, min(1.0, score))

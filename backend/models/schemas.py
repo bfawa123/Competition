@@ -124,6 +124,7 @@ class RecommendationRequest(BaseModel):
 class AssistantContext(BaseModel):
     """灵犀助手上下文"""
     userName: str
+    user_id: Optional[str] = None  # 真正的用户ID，用于检索该用户的记忆（userName 只是显示名）
     input: UserInput
     books: List[BookScore]
     currentPage: str  # 当前页面：route / recommend / compare 等

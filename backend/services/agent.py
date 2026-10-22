@@ -1,12 +1,15 @@
 """
 Agent 核心逻辑
 """
+import time
+from datetime import datetime
 from typing import List, Dict, Optional
 from models.schemas import Book, UserInput, Memory, BookScore, RecommendationResponse
 from services.book_service import book_service
 from services.memory_service import memory_service
 from services.recommender import recommender
 from utils.llm_client import get_llm_client
+from utils.scorer import normalise_memory_value
 from config import settings
 
 
@@ -28,6 +31,7 @@ class LibrarianAgent:
             "save_memory": self._tool_save_memory
         }
         self.trace = []  # 记录工具调用
+        self._t = 0.0   # 计时基准（用于给每个步骤算耗时）
 
     def _get_llm(self):
         """延迟获取 LLM 客户端"""
@@ -47,11 +51,17 @@ class LibrarianAgent:
             推荐结果（含记忆引用、Agent轨迹）
         """
         self.trace = []
+        self._t = time.perf_counter()
 
         # ========== 步骤1：检索相关记忆 ==========
-        self._log_trace("retrieve_memory", {"query": user_input.goal, "user_id": user_id})
+        all_memories = memory_service.get_all_memories(user_id)
         memories = memory_service.retrieve_memory(user_id, user_input.goal)
-        self._log_trace("retrieve_memory_result", {"count": len(memories)})
+        self._log_trace("retrieve_memory", {
+            "query": user_input.goal,
+            "user_id": user_id,
+            "candidates": len(all_memories),
+            "used": len(memories),
+        }, self._lap())
 
         # ========== 步骤2：检索候选书目 ==========
         requested_difficulty = getattr(user_input.difficulty, "value", user_input.difficulty)
@@ -69,14 +79,27 @@ class LibrarianAgent:
         # 如果有"页数偏好"的记忆，添加筛选
         pages_pref = next((m for m in memories if m.field == "pages"), None)
         if pages_pref:
-            if pages_pref.value == "prefer_short":
+            value = normalise_memory_value(pages_pref.value)
+            if value == "prefer_short":
                 filters["max_pages"] = 300
-            elif pages_pref.value == "prefer_long":
+            elif value == "prefer_long":
                 filters["min_pages"] = 300
 
-        self._log_trace("search_books", filters)
         candidates = book_service.search(filters)
-        self._log_trace("search_books_result", {"count": len(candidates)})
+
+        # 页数偏好（如"太厚了"→max_pages=300）可能把候选全部过滤光。
+        # 这时放宽页数条件重试，避免用户拿不到任何结果。
+        relaxed_pages = False
+        if not candidates and ("max_pages" in filters or "min_pages" in filters):
+            relaxed = {k: v for k, v in filters.items() if k not in ("max_pages", "min_pages")}
+            candidates = book_service.search(relaxed)
+            relaxed_pages = bool(candidates)
+
+        self._log_trace("search_books", {
+            **filters,
+            "count": len(candidates),
+            "relaxed_pages": relaxed_pages,
+        }, self._lap())
 
         if not candidates:
             return RecommendationResponse(
@@ -87,13 +110,20 @@ class LibrarianAgent:
             )
 
         # ========== 步骤3：评分排序 ==========
-        self._log_trace("recommend", {"candidates": len(candidates)})
         scored_books = recommender.recommend(candidates, user_input, memories)
         top_books = scored_books[:5]  # 取前5本
-        self._log_trace("recommend_result", {"top_count": len(top_books)})
+        self._log_trace("recommend", {
+            "candidates": len(candidates),
+            "top_count": len(top_books),
+        }, self._lap())
 
         # ========== 步骤4：生成自然语言推荐说明 ==========
+        llm = self._get_llm()
         explanation = self._generate_explanation(top_books, memories, user_input.language)
+        self._log_trace("generate_explanation", {
+            "mode": "llm" if llm else "fallback",
+            "tokens": (max(1, round(len(explanation) / 1.5)) if llm else 0),
+        }, self._lap())
 
         return RecommendationResponse(
             books=top_books,
@@ -193,12 +223,20 @@ class LibrarianAgent:
 
         return explanation
 
-    def _log_trace(self, action: str, details: Dict):
-        """记录Agent轨迹"""
+    def _lap(self) -> float:
+        """返回距上一次记录的毫秒数，用于给轨迹页展示每步耗时。"""
+        now = time.perf_counter()
+        ms = round((now - self._t) * 1000, 2)
+        self._t = now
+        return ms
+
+    def _log_trace(self, action: str, details: Dict, duration_ms: float = None):
+        """记录Agent轨迹（带真实耗时与时间戳）"""
         self.trace.append({
             "action": action,
             "details": details,
-            "timestamp": "now"  # 可替换为真实时间戳
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "duration_ms": duration_ms,
         })
 
     def get_trace(self) -> List[Dict]:

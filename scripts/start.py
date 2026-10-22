@@ -82,7 +82,7 @@ def start_backend():
     print(f"[BACKEND] 使用 Python: {python}")
     print("[BACKEND] 启动 FastAPI 后端 (端口 8000)...")
     proc = subprocess.Popen(
-        [python, "main.py"],
+        [python, "app", "main.py"],
         cwd=str(BACKEND_DIR),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

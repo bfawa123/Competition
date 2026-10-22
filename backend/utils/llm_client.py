@@ -65,9 +65,12 @@ def _load_api_key_safely(key_name: str, fallback: Optional[str]) -> Optional[str
 
     # 2. 从 secure_config 加载
     if _has_secure_config:
-        secure_key = _secure_load_key(key_name)
-        if secure_key:
-            return secure_key
+        try:
+            secure_key = _secure_load_key(key_name)
+            if secure_key:
+                return secure_key
+        except Exception:
+            pass
 
     # 3. 使用 fallback（.env 中的值）
     if fallback and not fallback.startswith("CHANGE_ME"):

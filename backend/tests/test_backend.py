@@ -7,8 +7,10 @@
 import sys
 from pathlib import Path
 
-# 添加项目根目录到 path
-sys.path.insert(0, str(Path(__file__).parent))
+# 添加依赖目录和项目根目录到 path（tests/ 的上一级是 backend/）
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BACKEND_DIR / "app"))
+sys.path.insert(0, str(BACKEND_DIR))
 
 
 def test_imports():

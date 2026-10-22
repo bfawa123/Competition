@@ -2,6 +2,7 @@ import type { BookScore, UserInput } from "../types";
 
 export interface AssistantContext {
   userName: string;
+  userId?: string;
   input: UserInput;
   books: BookScore[];
   currentPage: "route";

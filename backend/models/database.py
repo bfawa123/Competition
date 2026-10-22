@@ -121,6 +121,10 @@ class Database:
         if filters.get("max_pages"):
             books = [b for b in books if b.pages <= filters["max_pages"]]
 
+        # 最小页数筛选（原来缺失，导致"偏好长书"的记忆完全不生效）
+        if filters.get("min_pages"):
+            books = [b for b in books if b.pages >= filters["min_pages"]]
+
         # 最小案例占比
         if filters.get("min_case_ratio"):
             books = [b for b in books if b.case_ratio >= filters["min_case_ratio"]]
@@ -164,6 +168,10 @@ class Database:
                 None,
             )
             mem_dict = memory.model_dump(mode="json")
+            # 任务反馈（如"这本书我读过/太难"）允许多条并存；
+            # 只有稳定的偏好/画像才按 field 覆盖，保留最新一条。
+            if memory.type == "task_feedback":
+                existing_idx = None
             if existing_idx is not None:
                 all_memories[user_id][existing_idx] = mem_dict
             else:

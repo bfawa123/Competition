@@ -64,12 +64,13 @@ def load_api_key(key_name: str = "OPENAI_API_KEY") -> Optional[str]:
             if api_key:
                 print(f"[OK] 从 1Password 加载 {key_name}")
                 return api_key
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except Exception:
+        # 没装 op、沙箱禁止起子进程等都属于"这条路径不可用"，直接跳过，不要中断后续的密钥文件读取
         pass
 
     # 3. 从 Bitwarden 加载
     try:
-        import json  # 移到 try 块外或确保导入
+        import json
         result = subprocess.run(
             ["bw", "get", "item", "openai-api-key", "--nointeraction"],
             capture_output=True,
@@ -82,7 +83,7 @@ def load_api_key(key_name: str = "OPENAI_API_KEY") -> Optional[str]:
             if api_key:
                 print(f"[OK] 从 Bitwarden 加载 {key_name}")
                 return api_key
-    except (FileNotFoundError, json.JSONDecodeError, subprocess.TimeoutExpired):
+    except Exception:
         pass
 
     # 4. 从密钥文件加载

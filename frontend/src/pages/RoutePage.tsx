@@ -5,7 +5,7 @@ import { useApp } from "../state";
 import { askLearningAssistant } from "../services/assistantApi";
 
 export default function RoutePage() {
-  const { activeUserName, routeBooks, toggleRouteBook, lastInput } = useApp();
+  const { activeUserId, activeUserName, routeBooks, toggleRouteBook, lastInput } = useApp();
   const [expanded, setExpanded] = useState<number | null>(null);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -34,7 +34,7 @@ export default function RoutePage() {
     if (!text) return;
     setAnswer("正在结合当前路线整理回答…");
     try {
-      const remoteAnswer = await askLearningAssistant(text, { userName: activeUserName, input: lastInput, books: routeBooks, currentPage: "route" });
+      const remoteAnswer = await askLearningAssistant(text, { userName: activeUserName, userId: activeUserId, input: lastInput, books: routeBooks, currentPage: "route" });
       if (remoteAnswer) {
         setAnswer(remoteAnswer);
       } else {
