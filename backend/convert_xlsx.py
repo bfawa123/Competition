@@ -6,11 +6,19 @@
 import json
 import os
 import re
+import sys
 
 import openpyxl
 
+# 控制台打印可能遇到 GBK 无法编码的字符（如作者名中的 •），兜底避免崩溃
+if sys.stdout and sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 BASE = os.path.dirname(os.path.abspath(__file__))
-XLSX_CANDIDATES = ["书库1.xlsx", "书库（换封面版）.xlsx"]
+XLSX_CANDIDATES = ["书库2.xlsx", "书库1.xlsx", "书库（换封面版）.xlsx"]
 OUTPUT_PATH = os.path.join(BASE, "data", "books.json")
 # 难度映射: xlsx 5级 → 后端 3级
 DIFFICULTY_MAP = {
