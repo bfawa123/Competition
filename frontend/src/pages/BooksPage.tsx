@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
 import { BookOpenIcon, FunnelIcon, MagnifyingGlassIcon, SquaresFourIcon, RowsIcon, XIcon } from "@phosphor-icons/react";
-import { BookCover, BookDetail, difficultyNames, EmptyState, Portal, topicNames, useScrollLock } from "../components";
-import { getBook, searchBooks } from "../api";
+import { BookCover, BookDetail, difficultyNames, EmptyState, Portal, useScrollLock } from "../components";
+import { getBook, getTopics, searchBooks } from "../api";
 import type { Book } from "../types";
 
 export default function BooksPage() {
   const [filters, setFilters] = useState({ query: "", topic: "", difficulty: "", language: "", max_pages: "" });
+  const [topics, setTopics] = useState<string[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [selected, setSelected] = useState<Book | null>(null);
   const [grid, setGrid] = useState(false);
   const [mobileFilters, setMobileFilters] = useState(false);
   const [error, setError] = useState("");
   useScrollLock(mobileFilters || !!selected);
+  useEffect(() => { getTopics().then(setTopics).catch(() => setTopics([])); }, []);
   useEffect(() => {
     let active = true;
     const timer = window.setTimeout(() => searchBooks(filters).then((items) => { if (active) { setBooks(items); setError(""); } }).catch(() => { if (active) setError("书目服务暂时不可用，请检查后端连接。"); }), 180);
@@ -19,7 +21,7 @@ export default function BooksPage() {
   }, [filters]);
   const reset = () => setFilters({ query: "", topic: "", difficulty: "", language: "", max_pages: "" });
   async function openBook(book: Book) { try { setSelected(await getBook(book.id) || book); } catch { setError("无法读取书籍详情，请稍后重试。"); } }
-  const filterFields = <><label>学习主题<select value={filters.topic} onChange={(event) => setFilters({ ...filters, topic: event.target.value })}><option value="">全部主题</option>{Object.entries(topicNames).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>难度<select value={filters.difficulty} onChange={(event) => setFilters({ ...filters, difficulty: event.target.value })}><option value="">全部难度</option>{Object.entries(difficultyNames).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>语言<select value={filters.language} onChange={(event) => setFilters({ ...filters, language: event.target.value })}><option value="">全部语言</option><option value="zh">中文</option><option value="en">英文</option></select></label><label>最大页数<input type="number" min="100" step="50" value={filters.max_pages} onChange={(event) => setFilters({ ...filters, max_pages: event.target.value })} placeholder="不限" /></label><button className="reset-filter" onClick={reset}>清除全部</button></>;
+  const filterFields = <><label>学习主题<select value={filters.topic} onChange={(event) => setFilters({ ...filters, topic: event.target.value })}><option value="">全部主题</option>{topics.map((topic) => <option value={topic} key={topic}>{topic}</option>)}</select></label><label>难度<select value={filters.difficulty} onChange={(event) => setFilters({ ...filters, difficulty: event.target.value })}><option value="">全部难度</option>{Object.entries(difficultyNames).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>语言<select value={filters.language} onChange={(event) => setFilters({ ...filters, language: event.target.value })}><option value="">全部语言</option><option value="zh">中文</option><option value="en">英文</option></select></label><label>最大页数<input type="number" min="100" step="50" value={filters.max_pages} onChange={(event) => setFilters({ ...filters, max_pages: event.target.value })} placeholder="不限" /></label><button className="reset-filter" onClick={reset}>清除全部</button></>;
   return <div className="books-page page-enter">
     <section className="library-heading"><div><span className="eyebrow">结构化学习书库</span><h2>找到适合当下的书。</h2><p>按主题、难度、语言与篇幅缩小范围，再查看每本书的学习属性。</p></div><div className="search-box"><MagnifyingGlassIcon /><input value={filters.query} onChange={(event) => setFilters({ ...filters, query: event.target.value })} placeholder="搜索标题、关键词或简介" /><button className="mobile-filter-button" onClick={() => setMobileFilters(true)}><FunnelIcon /></button></div></section>
     {error && <p className="inline-error" role="alert">{error}</p>}

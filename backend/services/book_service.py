@@ -122,6 +122,11 @@ class BookService:
         """根据ID获取书目"""
         return self.db.get_book_by_id(book_id)
 
+    def get_all_topics(self) -> List[str]:
+        """获取书库全部去重主题（供前端筛选下拉动态加载）"""
+        books = self.db.get_all_books()
+        return sorted({b.topic for b in books if b.topic})
+
     def get_by_topic(self, topic: str) -> List[Book]:
         """根据主题获取书目"""
         return self.search({"topic": topic})

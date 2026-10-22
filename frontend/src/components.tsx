@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRightIcon, BookOpenIcon, BrainIcon, CheckCircleIcon, ClockIcon, MapPinIcon, SparkleIcon, XIcon } from "@phosphor-icons/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { Book, BookScore, Memory } from "./types";
@@ -271,10 +271,11 @@ export const difficultyNames = { beginner: "入门", intermediate: "进阶", adv
 
 export function BookCover({ book, size = "md" }: { book: Book; size?: "sm" | "md" | "lg" }) {
   const palette = ["cover-blue", "cover-green", "cover-orange", "cover-ink", "cover-cyan"][book.id % 5];
-  if (book.cover) {
+  const [coverFailed, setCoverFailed] = useState(false);
+  if (book.cover && !coverFailed) {
     return (
       <div className={`book-cover-img cover-${size}`} aria-label={`${book.title} 封面`}>
-        <img src={book.cover} alt={`${book.title} 封面`} loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+        <img src={book.cover} alt={`${book.title} 封面`} loading="lazy" onError={() => setCoverFailed(true)} />
       </div>
     );
   }
@@ -388,7 +389,7 @@ export function BookDetail({ book, score, onClose }: { book: Book; score?: BookS
       <motion.section className="detail-drawer" role="dialog" aria-modal="true" aria-label="书籍详情" initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} onMouseDown={(event) => event.stopPropagation()}>
         <button className="icon-button close" onClick={onClose} aria-label="关闭"><XIcon /></button>
         <BookCover book={book} size="lg" />
-        <div className="detail-heading"><span>{topicNames[book.topic]}</span><h2>{book.title}</h2><p>{book.author || "作者信息待补"}</p></div>
+        <div className="detail-heading"><span>{topicNames[book.topic] || book.topic}</span><h2>{book.title}</h2><p>{book.author || "作者信息待补"}</p></div>
         <p className="detail-description">{book.description}</p>
         <div className="detail-stats"><div><strong>{book.pages}</strong><span>页数</span></div><div><strong>{Math.round(book.case_ratio * 100)}%</strong><span>案例占比</span></div><div><strong>{difficultyNames[book.difficulty]}</strong><span>难度</span></div></div>
         <div className="ratio"><i style={{ width: `${book.case_ratio * 100}%` }} /><span>案例 {Math.round(book.case_ratio * 100)}%</span><span>理论 {Math.round(book.theory_ratio * 100)}%</span></div>

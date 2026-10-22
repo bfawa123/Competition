@@ -2,22 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRightIcon, BookOpenTextIcon, BrainIcon, CaretDownIcon, ClockIcon } from "@phosphor-icons/react";
-import { listMemories, recommend } from "../api";
-import { LoadingRoute, MemoryChip, topicNames } from "../components";
+import { getTopics, listMemories, recommend } from "../api";
+import { LoadingRoute, MemoryChip } from "../components";
 import { useApp } from "../state";
 import type { Difficulty, Language, Memory } from "../types";
-
-const goalOptions = Object.keys(topicNames).sort((a, b) => a.localeCompare(b, "zh"));
 
 export default function RecommendPage() {
   const { activeUserId, activeUserName, lastInput, setLastInput, setRecommendation } = useApp();
   const [input, setInput] = useState({ ...lastInput, goal: "" });
+  const [goalOptions, setGoalOptions] = useState<string[]>([]);
   const [showGoals, setShowGoals] = useState(false);
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   useEffect(() => { listMemories(activeUserId).then(setMemories); }, [activeUserId]);
+  useEffect(() => { getTopics().then(setGoalOptions).catch(() => setGoalOptions([])); }, []);
 
   async function submit() {
     if (!input.goal.trim()) { setError("请先输入你想学习的内容。"); return; }
@@ -35,7 +35,7 @@ export default function RecommendPage() {
     <section className="page-intro"><div><span className="eyebrow">新的学习路线</span><h2>从今天能做到的<br />一步开始。</h2></div><p>告诉馆员你的目标与限制。系统会检索相关记忆、筛选书目，并解释每一个排序依据。</p></section>
     <div className="recommend-grid">
       <section className="form-surface">
-        <div className="field-block goal-field"><label htmlFor="learning-goal">你想学习什么？</label><div className="goal-combobox"><input id="learning-goal" value={input.goal} onChange={(event) => { setInput({ ...input, goal: event.target.value }); setShowGoals(false); }} placeholder="输入学习主题" autoComplete="off" /><button type="button" onClick={() => setShowGoals((visible) => !visible)} aria-label="展开学习主题" aria-expanded={showGoals}><CaretDownIcon weight="bold" /></button>{showGoals && <div className="goal-options">{goalOptions.map((value) => <button type="button" key={value} onClick={() => { setInput({ ...input, goal: value }); setShowGoals(false); }}>{topicNames[value]}</button>)}</div>}</div></div>
+        <div className="field-block goal-field"><label htmlFor="learning-goal">你想学习什么？</label><div className="goal-combobox"><input id="learning-goal" value={input.goal} onChange={(event) => { setInput({ ...input, goal: event.target.value }); setShowGoals(false); }} placeholder="输入学习主题" autoComplete="off" /><button type="button" onClick={() => setShowGoals((visible) => !visible)} aria-label="展开学习主题" aria-expanded={showGoals}><CaretDownIcon weight="bold" /></button>{showGoals && <div className="goal-options">{goalOptions.map((value) => <button type="button" key={value} onClick={() => { setInput({ ...input, goal: value }); setShowGoals(false); }}>{value}</button>)}</div>}</div></div>
         <div className="two-fields">
           <div className="field-block"><label>当前水平</label><div className="segmented">{(["beginner", "intermediate", "advanced"] as Difficulty[]).map((value) => <button key={value} onClick={() => setInput({ ...input, difficulty: value })} className={input.difficulty === value ? "selected" : ""}>{value === "beginner" ? "入门" : value === "intermediate" ? "进阶" : "高阶"}</button>)}</div></div>
           <div className="field-block"><label>语言偏好</label><div className="segmented">{(["zh", "en"] as Language[]).map((value) => <button key={value} onClick={() => setInput({ ...input, language: value })} className={input.language === value ? "selected" : ""}>{value === "zh" ? "中文" : "英文"}</button>)}</div></div>

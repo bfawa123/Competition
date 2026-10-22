@@ -226,6 +226,16 @@ async def search_books(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/books/topics")
+async def list_topics():
+    """获取书库全部去重主题（前端筛选下拉动态加载）"""
+    try:
+        topics = book_service.get_all_topics()
+        return {"topics": topics}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/books/{book_id}")
 async def get_book(book_id: int):
     """获取单本书详情"""
