@@ -12,7 +12,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = BASE_DIR / "backend"
-FRONTEND_DIR = BASE_DIR / "fronted" / "fronted"
+FRONTEND_DIR = BASE_DIR / "frontend"
 VENV_DIR = BACKEND_DIR / ".venv"
 
 PY_MIN = (3, 10)
@@ -38,7 +38,7 @@ def check_python():
     version = sys.version_info[:2]
     if version < PY_MIN:
         raise RuntimeError(f"需要 Python >= {PY_MIN[0]}.{PY_MIN[1]}，当前 {version[0]}.{version[1]}")
-    print(f"✓ Python {version[0]}.{version[1]} 满足要求")
+    print(f"[OK] Python {version[0]}.{version[1]} 满足要求")
     return sys.executable
 
 
@@ -74,12 +74,12 @@ def create_venv(python):
     print("\n=== 创建后端虚拟环境 ===")
     if VENV_DIR.exists():
         if is_venv_valid():
-            print(f"✓ 已存在可用虚拟环境 {VENV_DIR}，跳过创建")
+            print(f"[OK] 已存在可用虚拟环境 {VENV_DIR}，跳过创建")
             return
-        print(f"⚠️  检测到 {VENV_DIR} 已损坏（可能是从其他电脑拷贝而来），正在删除重建...")
+        print(f"[!]  检测到 {VENV_DIR} 已损坏（可能是从其他电脑拷贝而来），正在删除重建...")
         shutil.rmtree(VENV_DIR)
     run([python, "-m", "venv", str(VENV_DIR)], cwd=BASE_DIR)
-    print("✓ 虚拟环境创建完成")
+    print("[OK] 虚拟环境创建完成")
 
 
 def install_backend_deps(python):
@@ -104,7 +104,7 @@ def install_backend_deps(python):
             if mirror:
                 cmd.extend(mirror)
             run(cmd, cwd=BASE_DIR, check=True)
-            print("✓ 后端依赖安装完成")
+            print("[OK] 后端依赖安装完成")
             return
         except RuntimeError as e:
             if idx == 0:
@@ -127,7 +127,7 @@ def check_node():
     major = int(version_out.lstrip("v").split(".")[0])
     if major < NODE_MIN:
         raise RuntimeError(f"Node.js 版本需 >= {NODE_MIN}，当前 {version_out}")
-    print(f"✓ Node.js {version_out} 满足要求，npm: {npm}")
+    print(f"[OK] Node.js {version_out} 满足要求，npm: {npm}")
     return node, npm
 
 
@@ -136,7 +136,7 @@ def install_frontend_deps(npm):
     print("\n=== 检查前端依赖 ===")
     node_modules = FRONTEND_DIR / "node_modules"
     if node_modules.exists() and any((node_modules / d).exists() for d in ["vite", "react", "@phosphor-icons"]):
-        print("✓ node_modules 已存在且看起来完整，跳过 npm install")
+        print("[OK] node_modules 已存在且看起来完整，跳过 npm install")
         return
 
     print("node_modules 缺失或不完整，执行 npm install...")
@@ -148,7 +148,7 @@ def install_frontend_deps(npm):
         try:
             cmd = [npm, "install"] + registry
             run(cmd, cwd=FRONTEND_DIR, check=True)
-            print("✓ 前端依赖安装完成")
+            print("[OK] 前端依赖安装完成")
             return
         except RuntimeError:
             if idx == 0:
@@ -167,7 +167,7 @@ def write_env_hint():
             "# ANTHROPIC_API_KEY=你的key\n",
             encoding="utf-8",
         )
-        print(f"\n✓ 已在 {env_file} 写入 LLM 配置提示（未配置时推荐功能用规则兜底）")
+        print(f"\n[OK] 已在 {env_file} 写入 LLM 配置提示（未配置时推荐功能用规则兜底）")
 
 
 def main():
@@ -188,13 +188,13 @@ def main():
         print("  环境安装完成！")
         print("=" * 60)
         print("\n接下来运行以下命令启动项目：")
-        print("  方式1（推荐）：双击 start_all_fixed.bat")
-        print("  方式2：python start_all_fixed.py")
+        print("  方式1（推荐）：双击 scripts\\start.bat")
+        print("  方式2：python scripts\\start.py")
         print("\n启动后访问：")
         print("  前端页面：http://127.0.0.1:5173")
         print("  后端文档：http://localhost:8000/docs")
     except RuntimeError as e:
-        print(f"\n❌ 安装失败: {e}")
+        print(f"\n[X] 安装失败: {e}")
         sys.exit(1)
 
 

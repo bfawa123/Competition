@@ -15,7 +15,7 @@
 **backend/.env**
 ```env
 LLM_PROVIDER=openai
-OPENAI_API_KEY=sk-2eff669cc1b847eaa50bf629e25f805f
+OPENAI_API_KEY=sk-你的DeepSeek密钥
 OPENAI_BASE_URL=https://api.deepseek.com/v1
 LLM_MODEL=deepseek-chat
 ```

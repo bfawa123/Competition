@@ -10,6 +10,6 @@ scikit-learn>=1.5.0
 numpy>=1.26.0
 
 # 以下两项为可选依赖：未安装时 LLM 解释和句子向量会用规则兜底 / TF-IDF 离线模式
-# openai>=1.3.7
+openai>=1.3.7
 # anthropic>=0.8.1
 # sentence-transformers>=2.2.2  # 启用 BAAI/bge-m3 语义检索时安装
