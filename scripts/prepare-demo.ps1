@@ -1,5 +1,6 @@
 # Prepare demo: backup + clear memories, clear cache, check backend
-$root = $PSScriptRoot
+# 脚本位于 scripts/ 子目录，项目根目录是其上一级
+$root = Split-Path -Parent $PSScriptRoot
 $data = "$root\backend\data"
 
 Write-Host "=== Preparing demo ==="
@@ -25,11 +26,11 @@ try {
     $r = Invoke-WebRequest -Uri "http://127.0.0.1:8000/health" -TimeoutSec 5 -UseBasicParsing
     Write-Host "[OK] backend is running (HTTP $($r.StatusCode))"
 } catch {
-    Write-Host "[!] backend not running - run start-backend.bat first"
+    Write-Host "[!] backend not running - run scripts\start-backend.bat first"
 }
 
 Write-Host ""
 Write-Host "Next:"
-Write-Host "  1) double-click start-backend.bat (if not running)"
-Write-Host "  2) double-click start-frontend.bat"
+Write-Host "  1) double-click scripts\start-backend.bat (if not running)"
+Write-Host "  2) double-click scripts\start-frontend.bat"
 Write-Host "  3) open http://127.0.0.1:5173"

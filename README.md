@@ -16,8 +16,8 @@
 
 - 前端：React 19、TypeScript、Vite
 - 后端：FastAPI、Pydantic、Uvicorn
-- 数据：`backend/data/books.json`、`backend/data/memories.json`
-- 原始书库：`data/data/书库1.xlsx`
+- 数据：`backend/data/books.json`（8000 本馆藏书目，含封面链接）、`backend/data/memories.json`
+- 原始书库：`data/书库1.xlsx`（Excel 书库，含封面链接列）
 
 ## 环境要求
 
@@ -100,10 +100,14 @@ npm run typecheck
 npm run build
 ```
 
+## 独立演示页
+
+`demo/灵犀AI馆员-演示页.html` 是一个自包含的静态演示页，内嵌预置的推荐结果与界面截图，无需启动后端或前端，直接双击打开即可展示推荐书单、排序依据和执行轨迹，适合现场演示或离线展示。
+
 ## 目录结构
 
 ```text
-灵犀0.15-修复详情弹窗/
+Competition-main/
 ├─ frontend/             # React 前端
 ├─ backend/              # FastAPI 后端
 │  ├─ app/              # 主要业务代码
@@ -111,21 +115,32 @@ npm run build
 │  ├─ services/         # 业务服务层
 │  ├─ models/           # 数据模型
 │  ├─ utils/            # 工具函数
-│  ├─ data/             # JSON 数据文件
-│  └─ covers/           # 书籍封面图片
+│  ├─ data/             # JSON 数据文件（books.json、memories.json）
+│  ├─ covers/           # 书籍封面图片（本地缓存）
+│  ├─ add_covers.py     # 把书库封面链接合并进 books.json
+│  ├─ convert_xlsx.py   # Excel 书库 → books.json
+│  └─ convert_library_csv.py  # CSV → books.json
+├─ demo/                # 独立演示页（静态 HTML，双击可打开）
+│  └─ 灵犀AI馆员-演示页.html
 ├─ scripts/             # 启动、诊断、维护脚本
-│  ├─ start.py
+│  ├─ start.py          # 一键启动（前后端）
 │  ├─ start.bat
-│  └─ diagnose.py
+│  ├─ diagnose.py       # 环境诊断
+│  ├─ start-backend.bat / .ps1   # 单独启动后端
+│  ├─ start-frontend.bat / .ps1  # 单独启动前端
+│  └─ prepare-demo.bat / .ps1    # 演示前清理记忆/缓存
 ├─ docs/                # 项目文档
+│  ├─ PROJECT_STRUCTURE.md  # 项目结构说明
 │  ├─ deployment.md
 │  ├─ api.md
+│  ├─ 演示方案.md
+│  ├─ 修复与改进建议.md
 │  ├─ fixes/
 │  │  ├─ scroll-lock.md
 │  │  └─ detail-dialog-position.md
 │  └─ ...
 ├─ data/                # 原始数据文件
-│  └─ data/书库1.xlsx
+│  └─ 书库1.xlsx        # Excel 书库（含封面链接列）
 ├─ setup.py             # 环境安装脚本
 └─ README.md            # 项目说明
 ```
@@ -153,4 +168,6 @@ npm run build
 
 ## 数据维护
 
-运行 `backend/convert_xlsx.py` 可将 Excel 书库转换为后端 JSON 数据。更新前请备份 `backend/data/books.json`，转换后运行后端检查和前端推荐流程，确认字段、封面及难度分布正常。
+- 运行 `backend/convert_xlsx.py` 可将 Excel 书库转换为后端 JSON 数据。更新前请备份 `backend/data/books.json`，转换后运行后端检查和前端推荐流程，确认字段、封面及难度分布正常。
+- 运行 `backend/add_covers.py` 会把 `data/书库1.xlsx` 的「封面」列链接按行序合并进 `backend/data/books.json` 的 `cover` 字段。
+- 书库主题由后端接口 `GET /api/books/topics` 动态返回，前端筛选下拉不再依赖写死的主题列表。

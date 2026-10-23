@@ -7,7 +7,7 @@
 ## 新的目录结构
 
 ```
-灵犀0.15-修复详情弹窗/
+Competition-main/
 ├── frontend/              # React 前端项目
 │   ├── src/              # 源代码
 │   ├── public/           # 静态资源
@@ -31,37 +31,49 @@
 │   │   ├── books.json
 │   │   ├── memories.json
 │   │   └── embeddings_cache.json
-│   ├── covers/          # 书籍封面图片（400+ 张）
+│   ├── covers/          # 书籍封面图片（本地缓存）
 │   ├── backend/docs/    # 后端文档
 │   │   ├── ALGORITHM.md
 │   │   ├── API.md
 │   │   └── SUMMARY.md
+│   ├── add_covers.py    # 把书库封面链接合并进 books.json
+│   ├── convert_xlsx.py  # Excel 书库 → books.json
+│   ├── convert_library_csv.py  # CSV → books.json
+│   ├── convert_csv_to_xlsx.py  # CSV → 书库2.xlsx
 │   ├── requirements.txt # Python 依赖
 │   └── .env             # 环境配置
 │
+├── demo/                # 独立演示页（静态 HTML，双击可打开）
+│   └── 灵犀AI馆员-演示页.html
+
 ├── scripts/             # 启动、诊断、维护脚本
 │   ├── start.py         # 跨平台启动脚本
 │   ├── start.bat        # Windows 一键启动
-│   └── diagnose.py      # 环境诊断脚本
+│   ├── diagnose.py      # 环境诊断脚本
+│   ├── start-backend.bat / .ps1   # 单独启动后端
+│   ├── start-frontend.bat / .ps1  # 单独启动前端
+│   └── prepare-demo.bat / .ps1    # 演示前清理记忆/缓存
 │
 ├── docs/                # 项目文档
+│   ├── PROJECT_STRUCTURE.md     # 项目结构说明（本文件）
 │   ├── deployment.md            # 部署说明
 │   ├── api.md                   # API 说明
 │   ├── deepseek-setup.md        # DeepSeek 配置
 │   ├── colleague-deployment.md  # 同事部署说明
+│   ├── 演示方案.md
+│   ├── 修复与改进建议.md
 │   └── fixes/                   # 修复说明
 │       ├── scroll-lock.md
 │       └── detail-dialog-position.md
 │
 ├── data/                # 原始数据文件
-│   └── 书库1.xlsx       # Excel 书库（34 MB）
+│   └── 书库1.xlsx       # Excel 书库（8000 本，含封面链接列）
 │
 ├── .claude/             # Claude AI 配置
 ├── .gitignore          # Git 忽略配置
 ├── README.md           # 项目说明
 ├── setup.py            # 环境安装脚本
-├── requirements.txt    # 根级依赖（如有）
-└── PROJECT_STRUCTURE.md # 本文件
+└── requirements.txt    # 根级依赖（如有）
 ```
 
 ## 主要变更

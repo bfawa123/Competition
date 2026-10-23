@@ -1,5 +1,6 @@
 # Start frontend (Vite) on http://127.0.0.1:5173
-$root = $PSScriptRoot
+# 脚本位于 scripts/ 子目录，项目根目录是其上一级
+$root = Split-Path -Parent $PSScriptRoot
 $node = "C:\Users\67260\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe"
 if (-not (Test-Path $node)) { $node = "node" }
 
